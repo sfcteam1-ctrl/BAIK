@@ -226,9 +226,12 @@
     border: none;
     background: transparent;
     color: var(--text);
-    outline: none;
     font-family: 'Noto Sans KR', sans-serif;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
     cursor: text;
   }
 
@@ -536,9 +539,7 @@ function renderRows() {
         </div>
         <div class="counter-group">
           <button class="cnt-btn minus" onpointerdown="startChange('${key}', -1)" onpointerup="stopChange()" onpointerleave="stopChange()">−</button>
-          <input class="cnt-val" id="val-${key}" value="0" type="number" min="0" inputmode="numeric"
-            onchange="onDirectInput('${key}', this.value)"
-            onfocus="this.select()">
+          <div class="cnt-val" id="val-${key}">0</div>
           <button class="cnt-btn plus" onpointerdown="startChange('${key}', 1)" onpointerup="stopChange()" onpointerleave="stopChange()">+</button>
         </div>
       `;
@@ -575,7 +576,7 @@ function stopChange() {
 
 function applyChange(key, delta, skipVibrate) {
   state[key] = Math.max(0, (state[key] || 0) + delta);
-  document.getElementById('val-' + key).value = state[key];
+  document.getElementById('val-' + key).textContent = state[key];
   updateTotals();
   if (!skipVibrate) {
     if (delta > 0) vibrate('plus');
@@ -733,7 +734,7 @@ function loadToInput(idx) {
     sec.rows.forEach(row => {
       const key = sec.id + '_' + row;
       const el = document.getElementById('val-' + key);
-      if (el) el.value = state[key] || 0;
+      if (el) el.textContent = state[key] || 0;
     });
   });
   updateTotals();
