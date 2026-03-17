@@ -3,13 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="출석체크">
-<meta name="theme-color" content="#0f1117">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icon-192.png">
 <title>교회 출석 체크</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
@@ -168,42 +161,44 @@
   }
 
   /* Row items */
-  .row-list { padding: 8px 0; }
+  .row-list { padding: 4px 0; }
   .row-item {
     display: flex;
     align-items: center;
-    padding: 10px 16px;
-    gap: 12px;
+    padding: 6px 10px 6px 16px;
+    gap: 10px;
     border-bottom: 1px solid var(--border);
     cursor: pointer;
     transition: background 0.12s;
     user-select: none;
     -webkit-user-select: none;
+    min-height: 64px;
   }
   .row-item:last-child { border-bottom: none; }
   .row-item:active { background: rgba(108,143,255,0.08); }
   .row-name {
     flex: 1;
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
     color: var(--muted);
   }
   .counter-group {
     display: flex;
-    align-items: center;
-    gap: 0;
+    align-items: stretch;
+    width: 50%;
+    min-width: 0;
     background: var(--bg);
-    border-radius: 12px;
+    border-radius: 14px;
     border: 1.5px solid var(--border);
     overflow: hidden;
+    height: 54px;
   }
   .cnt-btn {
-    width: 38px;
-    height: 38px;
+    flex: 1;
     background: transparent;
     border: none;
     color: var(--text);
-    font-size: 20px;
+    font-size: 26px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
@@ -211,20 +206,29 @@
     justify-content: center;
     transition: background 0.15s;
     user-select: none;
+    min-width: 0;
   }
   .cnt-btn:active { background: var(--surface2); }
-  .cnt-btn.minus { color: var(--red); }
-  .cnt-btn.plus { color: var(--green); }
+  .cnt-btn.minus { color: var(--red); flex: 0 0 44px; border-right: 1px solid var(--border); }
+  .cnt-btn.plus {
+    color: #fff;
+    background: var(--green);
+    flex: 0 0 54px;
+    font-size: 30px;
+    border-left: 1px solid var(--border);
+  }
+  .cnt-btn.plus:active { background: #22c480; }
   .cnt-val {
-    min-width: 52px;
+    flex: 1;
     text-align: center;
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 900;
     border: none;
     background: transparent;
     color: var(--text);
     outline: none;
     font-family: 'Noto Sans KR', sans-serif;
+    min-width: 0;
     cursor: text;
   }
 
@@ -811,14 +815,6 @@ renderRows();
 setToday();
 updateHeaderDate();
 setInterval(updateHeaderDate, 60000);
-</script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
-  });
-}
 </script>
 </body>
 </html>
