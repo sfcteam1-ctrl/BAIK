@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>교회 출석 체크</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --accent: #6c8fff;
+    --accent2: #a78bfa;
+    --gold: #f4c542;
+    --green: #34d399;
+    --red: #f87171;
+    --text: #e8eaf6;
+    --muted: #7b82a8;
+    --border: #2e3352;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a1d27 0%, #22263a 100%);
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-title span { color: var(--accent); }
+  .date-display {
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--surface2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    padding: 12px 16px;
+    gap: 8px;
+    background: var(--bg);
+    position: sticky;
+    top: 65px;
+    z-index: 99;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* Main content */
+  .content { padding: 16px; }
+
+  /* Date selector */
+  .date-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+  }
+  .date-bar label { color: var(--muted); font-size: 13px; white-space: nowrap; }
+  .date-bar input[type="date"] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 500;
+    outline: none;
+    color-scheme: dark;
+  }
+  .date-bar button {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    border-radius: 10px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Section card */
+  .section-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .section-label {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .section-subtotal {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--accent);
+  }
+
+  /* Row items */
+  .row-list { padding: 0; }
+  .row-item {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+    -webkit-user-select: none;
+    min-height: 80px;
+    overflow: hidden;
+  }
+  .row-item:last-child { border-bottom: none; }
+
+  /* 열 이름 - 좌측 고정 */
+  .row-name {
+    width: 48px;
+    flex-shrink: 0;
+    padding-left: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .row-name small {
+    display: block;
+    font-size: 9px;
+    color: var(--accent);
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  /* 카운터 전체 - 나머지 공간 꽉 채움 */
+  .counter-group {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    height: 80px;
+    overflow: hidden;
+  }
+
+  /* 초기화 버튼 */
+  .cnt-btn.reset {
+    flex: 0 0 42px;
+    background: rgba(123,130,168,0.10);
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s;
+    user-select: none;
+    letter-spacing: -0.3px;
+  }
+  .cnt-btn.reset:active { background: rgba(123,130,168,0.25); }
+
+  /* − 버튼 */
+  .cnt-btn.minus {
+    flex: 1;
+    background: rgba(248,113,113,0.08);
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--red);
+    font-size: 32px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s;
+    user-select: none;
+  }
+  .cnt-btn.minus:active { background: rgba(248,113,113,0.22); }
+
+  /* 숫자 표시: 세 자리 폭만큼 작게 */
+  .cnt-val {
+    flex: 0 0 56px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 900;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    border: none;
+    border-right: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  /* + 버튼: 우측 */
+  .cnt-btn.plus {
+    flex: 1;
+    background: rgba(52,211,153,0.13);
+    border: none;
+    color: var(--green);
+    font-size: 40px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s;
+    user-select: none;
+  }
+  .cnt-btn.plus:active { background: rgba(52,211,153,0.30); }
+
+  /* Grand total bar */
+  .grand-total-bar {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .grand-total-bar .label { font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.85); }
+  .grand-total-bar .value { font-size: 40px; font-weight: 900; color: #fff; }
+
+  /* Save button */
+  .save-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--green);
+    border: none;
+    border-radius: var(--radius);
+    color: #0f1117;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    letter-spacing: -0.3px;
+    transition: opacity 0.2s;
+    margin-bottom: 16px;
+  }
+  .save-btn:active { opacity: 0.8; }
+
+  /* History view */
+  .history-empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+    font-size: 15px;
+  }
+
+  .history-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .history-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    background: var(--surface2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .history-date { font-size: 15px; font-weight: 700; }
+  .history-total-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 12px;
+  }
+  .history-body { display: none; }
+  .history-body.open { display: block; }
+
+  .history-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .history-section:last-child { border-bottom: none; }
+  .history-section-title {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .history-rows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .history-row-chip {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 5px 12px;
+    font-size: 13px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .history-row-chip .chip-label { color: var(--muted); }
+  .history-row-chip .chip-val { font-weight: 700; color: var(--accent); }
+  .history-subtotal {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 700;
+  }
+
+  .history-delete-btn {
+    float: right;
+    margin: 12px 16px;
+    padding: 6px 14px;
+    background: transparent;
+    border: 1.5px solid var(--red);
+    border-radius: 10px;
+    color: var(--red);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .history-actions { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px; }
+  .export-btn {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--green);
+    color: #0f1117;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Stats tab */
+  .stats-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-card .stat-val { font-size: 28px; font-weight: 900; color: var(--accent); }
+  .stat-card .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .section-stats { margin-bottom: 16px; }
+  .section-stats-title { font-size: 14px; color: var(--muted); margin-bottom: 10px; font-weight: 600; }
+  .section-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .section-stat-label { width: 70px; font-size: 13px; color: var(--text); font-weight: 500; }
+  .section-stat-bar-wrap { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+  .section-stat-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.5s; }
+  .section-stat-num { width: 40px; text-align: right; font-size: 13px; font-weight: 700; color: var(--accent); }
+
+  /* Bottom nav area padding */
+  .page { display: none; }
+  .page.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">✝️ <span>출석</span> 체크</div>
+  <div class="date-display" id="headerDate"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('input')">📝 입력</button>
+  <button class="tab" onclick="switchTab('history')">📋 기록</button>
+  <button class="tab" onclick="switchTab('stats')">📊 통계</button>
+</div>
+
+<!-- INPUT PAGE -->
+<div class="content page active" id="page-input">
+
+  <div class="date-bar">
+    <label>📅 날짜</label>
+    <input type="date" id="inputDate">
+    <button onclick="setToday()">오늘</button>
+  </div>
+
+  <div class="grand-total-bar">
+    <div class="label">전체 합계</div>
+    <div class="value" id="grandTotalDisplay">0</div>
+  </div>
+
+  <!-- 2층 -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-label">
+        🏛️ 2층 본당
+        <span class="section-badge">4열</span>
+      </div>
+      <div class="section-subtotal" id="sub-2f">0</div>
+    </div>
+    <div class="row-list" id="rows-2f"></div>
+  </div>
+
+  <!-- 4층 -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-label">
+        🏛️ 4층 본당
+        <span class="section-badge">4열</span>
+      </div>
+      <div class="section-subtotal" id="sub-4f">0</div>
+    </div>
+    <div class="row-list" id="rows-4f"></div>
+  </div>
+
+  <!-- 유아실 -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-label">
+        🍼 유아실
+      </div>
+      <div class="section-subtotal" id="sub-nursery">0</div>
+    </div>
+    <div class="row-list" id="rows-nursery"></div>
+  </div>
+
+  <button class="save-btn" onclick="saveRecord()">💾 저장하기</button>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="content page" id="page-history">
+  <div id="historyList"></div>
+</div>
+
+<!-- STATS PAGE -->
+<div class="content page" id="page-stats">
+  <div class="stats-summary" id="statsSummary"></div>
+  <div class="section-stats" id="sectionStats"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SECTIONS = [
+  { id: '2f', label: '2층', rows: ['1열','2열','3열','4열'] },
+  { id: '4f', label: '4층', rows: ['1열','2열','3열','4열'] },
+  { id: 'nursery', label: '유아실', rows: ['유아실'] }
+];
+
+let state = {};
+
+// Init state
+function initState() {
+  state = {};
+  SECTIONS.forEach(sec => {
+    sec.rows.forEach(row => {
+      state[sec.id + '_' + row] = 0;
+    });
+  });
+}
+
+// Render rows
+function renderRows() {
+  SECTIONS.forEach(sec => {
+    const container = document.getElementById('rows-' + sec.id);
+    container.innerHTML = '';
+    sec.rows.forEach(row => {
+      const key = sec.id + '_' + row;
+      const div = document.createElement('div');
+      div.className = 'row-item';
+
+      div.innerHTML = `
+        <div class="row-name">
+          ${row}
+        </div>
+        <div class="counter-group">
+          <button class="cnt-btn reset" onclick="resetKey('${key}')">초기화</button>
+          <button class="cnt-btn minus" onpointerdown="startChange('${key}', -1)" onpointerup="stopChange()" onpointerleave="stopChange()">−</button>
+          <div class="cnt-val" id="val-${key}">0</div>
+          <button class="cnt-btn plus" onpointerdown="startChange('${key}', 1)" onpointerup="stopChange()" onpointerleave="stopChange()">+</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  });
+}
+
+let changeTimer = null;
+let holdTimer = null;
+
+// 진동 피드백 함수
+function vibrate(type) {
+  if (!navigator.vibrate) return;
+  if (type === 'plus')  navigator.vibrate(30);   // 짧고 경쾌한 진동 (+1)
+  if (type === 'minus') navigator.vibrate([10,20,10]); // 약한 두 번 (-1)
+  if (type === 'hold')  navigator.vibrate(15);   // 연속 누름 중
+}
+
+function startChange(key, delta) {
+  applyChange(key, delta);
+  holdTimer = setTimeout(() => {
+    changeTimer = setInterval(() => {
+      applyChange(key, delta);
+      vibrate('hold');
+    }, 80);
+  }, 400);
+}
+
+function stopChange() {
+  clearTimeout(holdTimer);
+  clearInterval(changeTimer);
+}
+
+function applyChange(key, delta, skipVibrate) {
+  state[key] = Math.max(0, (state[key] || 0) + delta);
+  document.getElementById('val-' + key).textContent = state[key];
+  updateTotals();
+  if (!skipVibrate) {
+    if (delta > 0) vibrate('plus');
+    else if (delta < 0) vibrate('minus');
+  }
+}
+
+function resetKey(key) {
+  state[key] = 0;
+  document.getElementById('val-' + key).textContent = 0;
+  updateTotals();
+  if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+}
+
+function onDirectInput(key, val) {
+  const n = parseInt(val);
+  state[key] = isNaN(n) || n < 0 ? 0 : n;
+  document.getElementById('val-' + key).value = state[key];
+  updateTotals();
+}
+
+function updateTotals() {
+  let grand = 0;
+  SECTIONS.forEach(sec => {
+    let sub = 0;
+    sec.rows.forEach(row => {
+      sub += state[sec.id + '_' + row] || 0;
+    });
+    document.getElementById('sub-' + sec.id).textContent = sub;
+    grand += sub;
+  });
+  document.getElementById('grandTotalDisplay').textContent = grand;
+}
+
+function setToday() {
+  const d = new Date();
+  document.getElementById('inputDate').value = d.toISOString().split('T')[0];
+}
+
+function getStorage() {
+  try { return JSON.parse(localStorage.getItem('church_records') || '[]'); } catch { return []; }
+}
+
+function setStorage(data) {
+  localStorage.setItem('church_records', JSON.stringify(data));
+}
+
+function saveRecord() {
+  const date = document.getElementById('inputDate').value;
+  if (!date) { showToast('날짜를 선택해주세요!'); return; }
+
+  // Check if any count > 0
+  let hasData = false;
+  SECTIONS.forEach(sec => {
+    sec.rows.forEach(row => { if (state[sec.id+'_'+row] > 0) hasData = true; });
+  });
+  if (!hasData) { showToast('인원을 입력해주세요!'); return; }
+
+  const records = getStorage();
+  const existing = records.findIndex(r => r.date === date);
+  const record = { date, sections: JSON.parse(JSON.stringify(state)) };
+
+  if (existing >= 0) {
+    if (!confirm('이미 저장된 날짜입니다. 덮어쓸까요?')) return;
+    records[existing] = record;
+  } else {
+    records.push(record);
+  }
+  records.sort((a,b) => b.date.localeCompare(a.date));
+  setStorage(records);
+  showToast('✅ 저장되었습니다!');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// History
+function renderHistory() {
+  const records = getStorage();
+  const container = document.getElementById('historyList');
+  if (!records.length) {
+    container.innerHTML = '<div class="history-empty">📭 저장된 기록이 없습니다</div>';
+    return;
+  }
+  container.innerHTML = '';
+  records.forEach((rec, idx) => {
+    const card = document.createElement('div');
+    card.className = 'history-card';
+
+    // Calculate grand total
+    let grand = 0;
+    SECTIONS.forEach(sec => {
+      sec.rows.forEach(row => { grand += rec.sections[sec.id+'_'+row] || 0; });
+    });
+
+    const bodyId = 'hbody-' + idx;
+    let sectionsHTML = '';
+    SECTIONS.forEach(sec => {
+      let sub = 0;
+      let chipsHTML = '';
+      sec.rows.forEach(row => {
+        const v = rec.sections[sec.id+'_'+row] || 0;
+        sub += v;
+        if (sec.id !== 'nursery') {
+          chipsHTML += `<div class="history-row-chip"><span class="chip-label">${row}</span><span class="chip-val">${v}</span></div>`;
+        }
+      });
+      const nurseryVal = sec.id === 'nursery' ? (rec.sections['nursery_유아실'] || 0) : null;
+      sectionsHTML += `
+        <div class="history-section">
+          <div class="history-section-title">${sec.label}</div>
+          ${sec.id !== 'nursery' ? `<div class="history-rows">${chipsHTML}</div>` : ''}
+          <div class="history-subtotal">소계: ${sec.id === 'nursery' ? nurseryVal : sub}명</div>
+        </div>`;
+    });
+
+    const dateObj = new Date(rec.date);
+    const weekday = ['일','월','화','수','목','금','토'][dateObj.getDay()];
+    const displayDate = rec.date.replace(/-/g, '.') + ` (${weekday})`;
+
+    card.innerHTML = `
+      <div class="history-card-header" onclick="toggleHistory('${bodyId}')">
+        <div class="history-date">${displayDate}</div>
+        <div class="history-total-badge">합계 ${grand}명</div>
+      </div>
+      <div class="history-body" id="${bodyId}">
+        ${sectionsHTML}
+        <div class="history-actions">
+          <button class="export-btn" onclick="loadToInput(${idx})">✏️ 불러오기</button>
+          <button class="history-delete-btn" onclick="deleteRecord(${idx})">🗑 삭제</button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function toggleHistory(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+
+function deleteRecord(idx) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  const records = getStorage();
+  records.splice(idx, 1);
+  setStorage(records);
+  renderHistory();
+  renderStats();
+  showToast('삭제되었습니다');
+}
+
+function loadToInput(idx) {
+  const records = getStorage();
+  const rec = records[idx];
+  state = JSON.parse(JSON.stringify(rec.sections));
+  document.getElementById('inputDate').value = rec.date;
+  SECTIONS.forEach(sec => {
+    sec.rows.forEach(row => {
+      const key = sec.id + '_' + row;
+      const el = document.getElementById('val-' + key);
+      if (el) el.textContent = state[key] || 0;
+    });
+  });
+  updateTotals();
+  switchTab('input');
+  showToast('불러왔습니다!');
+}
+
+// Stats
+function renderStats() {
+  const records = getStorage();
+  const container = document.getElementById('statsSummary');
+  const sContainer = document.getElementById('sectionStats');
+
+  if (!records.length) {
+    container.innerHTML = '<div class="history-empty" style="grid-column:1/-1">📊 저장된 기록이 없습니다</div>';
+    sContainer.innerHTML = '';
+    return;
+  }
+
+  const totals = records.map(rec => {
+    let g = 0;
+    SECTIONS.forEach(sec => sec.rows.forEach(row => { g += rec.sections[sec.id+'_'+row] || 0; }));
+    return g;
+  });
+
+  const avg = Math.round(totals.reduce((a,b)=>a+b,0) / totals.length);
+  const max = Math.max(...totals);
+  const maxDate = records[totals.indexOf(max)].date;
+
+  container.innerHTML = `
+    <div class="stat-card"><div class="stat-val">${records.length}</div><div class="stat-label">총 기록 수</div></div>
+    <div class="stat-card"><div class="stat-val">${avg}</div><div class="stat-label">평균 출석</div></div>
+    <div class="stat-card"><div class="stat-val">${max}</div><div class="stat-label">최대 출석</div></div>
+    <div class="stat-card"><div class="stat-val" style="font-size:16px">${maxDate.replace(/-/g,'.')}</div><div class="stat-label">최대 출석일</div></div>
+  `;
+
+  // Section averages
+  let sHTML = '<div class="section-stats-title">구역별 평균 인원</div>';
+  let secAvgs = [];
+  SECTIONS.forEach(sec => {
+    let total = 0;
+    records.forEach(rec => sec.rows.forEach(row => { total += rec.sections[sec.id+'_'+row] || 0; }));
+    secAvgs.push({ label: sec.label, avg: Math.round(total / records.length) });
+  });
+  const maxAvg = Math.max(...secAvgs.map(s => s.avg), 1);
+  secAvgs.forEach(s => {
+    const pct = Math.round((s.avg / maxAvg) * 100);
+    sHTML += `<div class="section-stat-row">
+      <div class="section-stat-label">${s.label}</div>
+      <div class="section-stat-bar-wrap"><div class="section-stat-bar" style="width:${pct}%"></div></div>
+      <div class="section-stat-num">${s.avg}</div>
+    </div>`;
+  });
+  sContainer.innerHTML = sHTML;
+}
+
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['input','history','stats'][i] === tab);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tab).classList.add('active');
+  if (tab === 'history') renderHistory();
+  if (tab === 'stats') renderStats();
+}
+
+// Header date update
+function updateHeaderDate() {
+  const d = new Date();
+  const days = ['일','월','화','수','목','금','토'];
+  document.getElementById('headerDate').textContent =
+    `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`;
+}
+
+// Init
+initState();
+renderRows();
+setToday();
+updateHeaderDate();
+setInterval(updateHeaderDate, 60000);
+</script>
+</body>
+</html>
