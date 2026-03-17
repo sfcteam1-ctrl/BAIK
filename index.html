@@ -165,75 +165,91 @@
   .row-item {
     display: flex;
     align-items: center;
-    padding: 6px 10px 6px 16px;
-    gap: 10px;
     border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.12s;
     user-select: none;
     -webkit-user-select: none;
     min-height: 64px;
+    overflow: hidden;
   }
   .row-item:last-child { border-bottom: none; }
-  .row-item:active { background: rgba(108,143,255,0.08); }
+
+  /* 열 이름 - 좌측 고정 */
   .row-name {
-    flex: 1;
+    width: 52px;
+    flex-shrink: 0;
+    padding-left: 14px;
     font-size: 15px;
     font-weight: 600;
     color: var(--muted);
   }
+  .row-name small {
+    display: block;
+    font-size: 9px;
+    color: var(--accent);
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+
+  /* 카운터 전체 - 나머지 공간 꽉 채움 */
   .counter-group {
+    flex: 1;
     display: flex;
     align-items: stretch;
-    width: 50%;
-    min-width: 0;
-    background: var(--bg);
-    border-radius: 14px;
-    border: 1.5px solid var(--border);
+    height: 64px;
     overflow: hidden;
-    height: 54px;
   }
-  .cnt-btn {
+
+  /* − 버튼: 좌측 절반 */
+  .cnt-btn.minus {
     flex: 1;
-    background: transparent;
+    background: rgba(248,113,113,0.08);
     border: none;
-    color: var(--text);
-    font-size: 26px;
+    border-right: 1px solid var(--border);
+    color: var(--red);
+    font-size: 32px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
+    transition: background 0.12s;
     user-select: none;
-    min-width: 0;
   }
-  .cnt-btn:active { background: var(--surface2); }
-  .cnt-btn.minus { color: var(--red); flex: 0 0 44px; border-right: 1px solid var(--border); }
-  .cnt-btn.plus {
-    color: #fff;
-    background: var(--green);
-    flex: 0 0 54px;
-    font-size: 30px;
-    border-left: 1px solid var(--border);
-  }
-  .cnt-btn.plus:active { background: #22c480; }
+  .cnt-btn.minus:active { background: rgba(248,113,113,0.22); }
+
+  /* 숫자 표시: 세 자리 폭만큼 작게 */
   .cnt-val {
-    flex: 1;
+    flex: 0 0 58px;
     text-align: center;
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 900;
-    border: none;
-    background: transparent;
+    background: var(--bg);
     color: var(--text);
     font-family: 'Noto Sans KR', sans-serif;
-    min-width: 0;
+    border: none;
+    border-right: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
     pointer-events: none;
-    cursor: text;
   }
+
+  /* + 버튼: 우측 절반 */
+  .cnt-btn.plus {
+    flex: 1;
+    background: rgba(52,211,153,0.13);
+    border: none;
+    color: var(--green);
+    font-size: 36px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s;
+    user-select: none;
+  }
+  .cnt-btn.plus:active { background: rgba(52,211,153,0.30); }
 
   /* Grand total bar */
   .grand-total-bar {
@@ -525,17 +541,11 @@ function renderRows() {
       const div = document.createElement('div');
       div.className = 'row-item';
 
-      // 열 이름 영역 탭 → +1 진동
-      div.addEventListener('click', function(e) {
-        // +/- 버튼이나 input 클릭은 제외
-        if (e.target.classList.contains('cnt-btn') || e.target.classList.contains('cnt-val')) return;
-        applyChange(key, 1);
-      });
-
+      // 열 이름 영역 탭 → +1 진동 제거 (좌/우 버튼으로만 조작)
       div.innerHTML = `
         <div class="row-name">
           ${row}
-          <div style="font-size:10px;color:var(--accent);opacity:0.7;margin-top:2px;">탭하면 +1</div>
+          <small>← − / + →</small>
         </div>
         <div class="counter-group">
           <button class="cnt-btn minus" onpointerdown="startChange('${key}', -1)" onpointerup="stopChange()" onpointerleave="stopChange()">−</button>
