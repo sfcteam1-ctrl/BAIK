@@ -161,24 +161,24 @@
   }
 
   /* Row items */
-  .row-list { padding: 4px 0; }
+  .row-list { padding: 0; }
   .row-item {
     display: flex;
     align-items: center;
     border-bottom: 1px solid var(--border);
     user-select: none;
     -webkit-user-select: none;
-    min-height: 64px;
+    min-height: 80px;
     overflow: hidden;
   }
   .row-item:last-child { border-bottom: none; }
 
   /* 열 이름 - 좌측 고정 */
   .row-name {
-    width: 52px;
+    width: 48px;
     flex-shrink: 0;
-    padding-left: 14px;
-    font-size: 15px;
+    padding-left: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--muted);
   }
@@ -195,11 +195,30 @@
     flex: 1;
     display: flex;
     align-items: stretch;
-    height: 64px;
+    height: 80px;
     overflow: hidden;
   }
 
-  /* − 버튼: 좌측 절반 */
+  /* 초기화 버튼 */
+  .cnt-btn.reset {
+    flex: 0 0 42px;
+    background: rgba(123,130,168,0.10);
+    border: none;
+    border-right: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s;
+    user-select: none;
+    letter-spacing: -0.3px;
+  }
+  .cnt-btn.reset:active { background: rgba(123,130,168,0.25); }
+
+  /* − 버튼 */
   .cnt-btn.minus {
     flex: 1;
     background: rgba(248,113,113,0.08);
@@ -219,7 +238,7 @@
 
   /* 숫자 표시: 세 자리 폭만큼 작게 */
   .cnt-val {
-    flex: 0 0 58px;
+    flex: 0 0 56px;
     text-align: center;
     font-size: 20px;
     font-weight: 900;
@@ -234,13 +253,13 @@
     pointer-events: none;
   }
 
-  /* + 버튼: 우측 절반 */
+  /* + 버튼: 우측 */
   .cnt-btn.plus {
     flex: 1;
     background: rgba(52,211,153,0.13);
     border: none;
     color: var(--green);
-    font-size: 36px;
+    font-size: 40px;
     font-weight: 700;
     cursor: pointer;
     display: flex;
@@ -541,13 +560,12 @@ function renderRows() {
       const div = document.createElement('div');
       div.className = 'row-item';
 
-      // 열 이름 영역 탭 → +1 진동 제거 (좌/우 버튼으로만 조작)
       div.innerHTML = `
         <div class="row-name">
           ${row}
-          <small>← − / + →</small>
         </div>
         <div class="counter-group">
+          <button class="cnt-btn reset" onclick="resetKey('${key}')">초기화</button>
           <button class="cnt-btn minus" onpointerdown="startChange('${key}', -1)" onpointerup="stopChange()" onpointerleave="stopChange()">−</button>
           <div class="cnt-val" id="val-${key}">0</div>
           <button class="cnt-btn plus" onpointerdown="startChange('${key}', 1)" onpointerup="stopChange()" onpointerleave="stopChange()">+</button>
@@ -592,6 +610,13 @@ function applyChange(key, delta, skipVibrate) {
     if (delta > 0) vibrate('plus');
     else if (delta < 0) vibrate('minus');
   }
+}
+
+function resetKey(key) {
+  state[key] = 0;
+  document.getElementById('val-' + key).textContent = 0;
+  updateTotals();
+  if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
 }
 
 function onDirectInput(key, val) {
